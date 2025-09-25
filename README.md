@@ -29,18 +29,21 @@
 ## ✨ Tính năng nổi bật
 
 ### 🔧 Chức năng cốt lõi
+
 - **Tách dữ liệu thông minh**: Hỗ trợ delimiter tùy chỉnh (mặc định: `|`)
 - **Xử lý đa dòng**: Tách nhiều dòng dữ liệu cùng lúc
 - **Hiển thị trực quan**: Bảng dữ liệu có thể sắp xếp và tương tác
 - **Sao chép nhanh**: Copy dữ liệu đã xử lý vào clipboard
 
 ### 🚀 Trải nghiệm người dùng
+
 - **Giao diện hiện đại**: Thiết kế tối giản, thân thiện
 - **Phím tắt**: Hỗ trợ phím Enter để thao tác nhanh
 - **Xử lý lỗi**: Thông báo rõ ràng khi có lỗi xảy ra
 - **Tùy chỉnh linh hoạt**: Cấu hình delimiter theo nhu cầu
 
 ### 📊 Khả năng xử lý
+
 - **Hiệu suất cao**: Xử lý hàng nghìn dòng dữ liệu
 - **Bộ nhớ tối ưu**: Quản lý tài nguyên hiệu quả
 - **Tương thích tốt**: Chạy ổn định trên Windows 10/11
@@ -72,26 +75,32 @@
 ### Hướng dẫn chi tiết
 
 #### Bước 1: Nhập dữ liệu
+
 - Mở ứng dụng Data Split Pro
 - Nhập dữ liệu cần tách vào ô "Nhập dữ liệu"
 - Hỗ trợ nhiều dòng dữ liệu cùng lúc
 
 #### Bước 2: Cấu hình delimiter
+
 - Chọn delimiter phù hợp (mặc định: `|`)
 - Các delimiter phổ biến: `,`, `;`, `\t`, ` `, `-`, `_`
 
 #### Bước 3: Tách dữ liệu
+
 - Nhấn nút "Tách Dữ Liệu" hoặc phím Enter
 - Xem kết quả trong bảng bên dưới
 
 #### Bước 4: Xuất dữ liệu
+
 - Sử dụng nút "Copy" để sao chép vào clipboard
 - Dán vào Excel, Word hoặc ứng dụng khác
 
 ## 💡 Ví dụ thực tế
 
 ### Ví dụ 1: Dữ liệu CSV
+
 **Input:**
+
 ```
 John,Doe,25,Developer,New York
 Jane,Smith,30,Designer,Los Angeles
@@ -106,7 +115,9 @@ Bob,Johnson,28,Manager,Chicago
 | Bob | Johnson | 28 | Manager | Chicago |
 
 ### Ví dụ 2: Dữ liệu pipe-separated
+
 **Input:**
+
 ```
 Product A|$19.99|In Stock|Electronics
 Product B|$29.99|Out of Stock|Clothing
@@ -122,17 +133,18 @@ Product C|$9.99|In Stock|Books
 
 ## 🛠️ Yêu cầu hệ thống
 
-| Thành phần | Yêu cầu |
-|------------|---------|
+| Thành phần       | Yêu cầu                                 |
+| ---------------- | --------------------------------------- |
 | **Hệ điều hành** | Windows 10 (version 1903+) / Windows 11 |
-| **.NET Runtime** | .NET 6.0 Desktop Runtime |
-| **RAM** | Tối thiểu 512MB, khuyến nghị 1GB+ |
-| **Dung lượng** | ~50MB cho ứng dụng |
-| **Màn hình** | Độ phân giải tối thiểu 1024x768 |
+| **.NET Runtime** | .NET 6.0 Desktop Runtime                |
+| **RAM**          | Tối thiểu 512MB, khuyến nghị 1GB+       |
+| **Dung lượng**   | ~50MB cho ứng dụng                      |
+| **Màn hình**     | Độ phân giải tối thiểu 1024x768         |
 
 ## 🔨 Build từ source code
 
 ### Yêu cầu phát triển
+
 - Visual Studio 2022 hoặc VS Code
 - .NET 6.0 SDK
 - Windows 10/11
@@ -155,6 +167,7 @@ dotnet run
 ```
 
 ### Cấu trúc dự án
+
 ```
 ToolSplitData/
 ├── DataSplitPro.csproj    # Project configuration
@@ -176,6 +189,7 @@ Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng! Hãy tham gia ph
 5. **Tạo Pull Request**
 
 ### Báo cáo lỗi
+
 - Sử dụng [Issues](https://github.com/hasoftware/ToolSplitData/issues) để báo cáo lỗi
 - Mô tả chi tiết vấn đề và cách tái tạo
 - Đính kèm screenshot nếu cần thiết
@@ -183,12 +197,14 @@ Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng! Hãy tham gia ph
 ## 📈 Roadmap
 
 ### Version 1.1 (Planned)
+
 - [ ] Hỗ trợ import file CSV/Excel
 - [ ] Export dữ liệu ra nhiều định dạng
 - [ ] Tùy chỉnh giao diện (theme)
 - [ ] Lưu cấu hình delimiter
 
 ### Version 1.2 (Future)
+
 - [ ] Plugin system
 - [ ] Batch processing
 - [ ] Command line interface
@@ -200,11 +216,11 @@ Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng! Hãy tham gia ph
 
 **HASOFTWARE Development Team**
 
-| Platform | Link |
-|----------|------|
-| **GitHub** | [@hasoftware](https://github.com/hasoftware) |
-| **Telegram** | [@hasoftware](https://t.me/hasoftware) |
-| **Developer** | [@HoangAnhDev](https://github.com/HoangAnhDev) |
+| Platform      | Link                                         |
+| ------------- | -------------------------------------------- |
+| **GitHub**    | [@hasoftware](https://github.com/hasoftware) |
+| **Telegram**  | [@hasoftware](https://t.me/hasoftware)       |
+| **Developer** | [@hasoftware](https://github.com/hasoftware) |
 
 </div>
 
@@ -213,7 +229,7 @@ Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng! Hãy tham gia ph
 ```
 Copyright © HASOFTWARE 2025. All rights reserved.
 
-This software is proprietary and confidential. 
+This software is proprietary and confidential.
 Unauthorized copying, distribution, or modification is strictly prohibited.
 ```
 
