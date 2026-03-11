@@ -130,7 +130,7 @@ namespace DataSplitPro
                 this.SuspendLayout();
 
                 // Form properties
-                this.Text = "Data Split Pro v1.0 - HASOFTWARE";
+                this.Text = "Data Split Pro v1.1 - HASOFTWARE";
                 this.Size = new Size(1000, 700);
                 this.StartPosition = FormStartPosition.CenterScreen;
                 this.MinimumSize = new Size(800, 600);
@@ -299,7 +299,8 @@ namespace DataSplitPro
                     BorderStyle = BorderStyle.FixedSingle,
                     AllowUserToAddRows = false,
                     AllowUserToDeleteRows = false,
-                    ReadOnly = true,
+                    ReadOnly = false,
+                    EditMode = DataGridViewEditMode.EditProgrammatically, // Edit only starts via double click
                     SelectionMode = DataGridViewSelectionMode.CellSelect,
                     MultiSelect = true,
                     AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -564,6 +565,8 @@ namespace DataSplitPro
                 // Add event handlers once
                 dgvData.ColumnHeaderMouseClick += DgvData_ColumnHeaderMouseClick;
                 dgvData.CellClick += DgvData_CellClick;
+                dgvData.CellDoubleClick += DgvData_CellDoubleClick;
+                dgvData.EditingControlShowing += DgvData_EditingControlShowing;
                 dgvData.SelectionChanged += DgvData_SelectionChanged;
                 this.Resize += MainForm_Resize;
 
@@ -583,6 +586,10 @@ namespace DataSplitPro
         {
             try
             {
+                // Skip shortcuts while a cell is being edited (let the editor handle keys)
+                if (dgvData.IsCurrentCellInEditMode)
+                    return;
+
                 // Ctrl+A: Select all cells (highlight)
                 if (e.Control && e.KeyCode == Keys.A)
                 {
@@ -1375,6 +1382,34 @@ namespace DataSplitPro
             {
                 // Log error but don't show message box to avoid UI freezing
                 System.Diagnostics.Debug.WriteLine($"Error in cell click: {ex.Message}");
+            }
+        }
+
+        private void DgvData_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                // Only data columns are editable (skip STT and Checkbox columns)
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 2)
+                {
+                    dgvData.CurrentCell = dgvData.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                    dgvData.BeginEdit(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in cell double click: {ex.Message}");
+            }
+        }
+
+        private void DgvData_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            // Match dark theme for the in-cell editor
+            if (e.Control is TextBox txt)
+            {
+                txt.BackColor = Color.FromArgb(60, 60, 63);
+                txt.ForeColor = Color.White;
+                txt.BorderStyle = BorderStyle.None;
             }
         }
 
