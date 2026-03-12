@@ -42,6 +42,12 @@ namespace DataSplitPro
         private ToolStripStatusLabel lblGithub = null!;
         private CancellationTokenSource? cancellationTokenSource = null;
 
+        // Search/filter controls
+        private Label lblSearch = null!;
+        private TextBox txtSearch = null!;
+        private ComboBox cboSearchColumn = null!;
+        private Button btnClearSearch = null!;
+
         // Export functionality controls
         private TextBox txtExportFormat = null!;
         private Button[] columnButtons = new Button[16]; // Column1 to Column16
@@ -130,7 +136,7 @@ namespace DataSplitPro
                 this.SuspendLayout();
 
                 // Form properties
-                this.Text = "Data Split Pro v1.1 - HASOFTWARE";
+                this.Text = "Data Split Pro v1.2 - HASOFTWARE";
                 this.Size = new Size(1000, 700);
                 this.StartPosition = FormStartPosition.CenterScreen;
                 this.MinimumSize = new Size(800, 600);
@@ -166,6 +172,56 @@ namespace DataSplitPro
                     ForeColor = Color.White,
                     BorderStyle = BorderStyle.FixedSingle
                 };
+
+                // Search/filter section (same row as delimiter)
+                lblSearch = new Label
+                {
+                    Text = "🔍 Lọc:",
+                    Font = new Font("Segoe UI", 10),
+                    ForeColor = Color.White,
+                    AutoSize = true,
+                    Location = new Point(220, 183)
+                };
+
+                txtSearch = new TextBox
+                {
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(285, 180),
+                    Size = new Size(220, 25),
+                    BackColor = Color.FromArgb(60, 60, 63),
+                    ForeColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    PlaceholderText = "Nhập từ khóa để lọc..."
+                };
+                txtSearch.TextChanged += TxtSearch_TextChanged;
+
+                cboSearchColumn = new ComboBox
+                {
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(515, 180),
+                    Size = new Size(130, 25),
+                    BackColor = Color.FromArgb(60, 60, 63),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    DropDownStyle = ComboBoxStyle.DropDownList
+                };
+                cboSearchColumn.Items.Add("Tất cả cột");
+                cboSearchColumn.SelectedIndex = 0;
+                cboSearchColumn.SelectedIndexChanged += CboSearchColumn_SelectedIndexChanged;
+
+                btnClearSearch = new Button
+                {
+                    Text = "✕",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(655, 180),
+                    Size = new Size(30, 25),
+                    BackColor = Color.FromArgb(220, 53, 69),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Cursor = Cursors.Hand
+                };
+                btnClearSearch.FlatAppearance.BorderSize = 0;
+                btnClearSearch.Click += BtnClearSearch_Click;
 
                 // Export format section
                 lblExportFormat = new Label
@@ -538,6 +594,7 @@ namespace DataSplitPro
                 var allControls = new List<Control>
                 {
                     lblDelimiter, txtDelimiter, pnlDelimiterSeparator,
+                    lblSearch, txtSearch, cboSearchColumn, btnClearSearch,
                     lblExportFormat, pnlExportSeparator, txtExportFormat, btnClearExport, btnCopyExport, btnExportFile,
                     progressBar, lblProgress, dgvData
                 };
@@ -1107,9 +1164,16 @@ namespace DataSplitPro
             {
                 if (statusStrip == null) return;
 
-                // Update Total
+                // Update Total (show visible/all when a filter is active)
                 int totalRows = dgvData.Rows.Count;
-                lblTotal.Text = $"Total: {totalRows}";
+                if (dgvData.DataSource is DataTable dtSource && dtSource.Rows.Count != totalRows)
+                {
+                    lblTotal.Text = $"Total: {totalRows}/{dtSource.Rows.Count}";
+                }
+                else
+                {
+                    lblTotal.Text = $"Total: {totalRows}";
+                }
 
                 // Update Selected (checked checkboxes)
                 int selectedCount = 0;
@@ -1413,6 +1477,118 @@ namespace DataSplitPro
             }
         }
 
+        private void TxtSearch_TextChanged(object? sender, EventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void CboSearchColumn_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void BtnClearSearch_Click(object? sender, EventArgs e)
+        {
+            txtSearch.Clear();
+            cboSearchColumn.SelectedIndex = 0;
+        }
+
+        private void ApplyFilter()
+        {
+            try
+            {
+                if (dgvData.DataSource is not DataTable dt)
+                    return;
+
+                string keyword = txtSearch.Text.Trim();
+
+                if (string.IsNullOrEmpty(keyword) || dt.Columns.Count <= 2)
+                {
+                    dt.DefaultView.RowFilter = "";
+                }
+                else
+                {
+                    string escaped = EscapeLikeValue(keyword);
+
+                    // Filter by a specific column or across all data columns (skip STT and Checkbox)
+                    if (cboSearchColumn.SelectedIndex > 0 &&
+                        cboSearchColumn.SelectedItem is string colName &&
+                        dt.Columns.Contains(colName))
+                    {
+                        dt.DefaultView.RowFilter = $"[{colName}] LIKE '%{escaped}%'";
+                    }
+                    else
+                    {
+                        var conditions = new List<string>();
+                        for (int i = 2; i < dt.Columns.Count; i++)
+                        {
+                            conditions.Add($"[{dt.Columns[i].ColumnName}] LIKE '%{escaped}%'");
+                        }
+                        dt.DefaultView.RowFilter = string.Join(" OR ", conditions);
+                    }
+                }
+
+                UpdateStatusBar();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error applying filter: {ex.Message}");
+            }
+        }
+
+        private static string EscapeLikeValue(string value)
+        {
+            // Escape special characters in DataView LIKE expressions
+            var sb = new StringBuilder();
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '[':
+                    case ']':
+                    case '%':
+                    case '*':
+                        sb.Append('[').Append(c).Append(']');
+                        break;
+                    case '\'':
+                        sb.Append("''");
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        private void UpdateSearchColumns()
+        {
+            try
+            {
+                string? previousSelection = cboSearchColumn.SelectedItem as string;
+
+                cboSearchColumn.SelectedIndexChanged -= CboSearchColumn_SelectedIndexChanged;
+                cboSearchColumn.Items.Clear();
+                cboSearchColumn.Items.Add("Tất cả cột");
+
+                if (dgvData.DataSource is DataTable dt)
+                {
+                    for (int i = 2; i < dt.Columns.Count; i++)
+                    {
+                        cboSearchColumn.Items.Add(dt.Columns[i].ColumnName);
+                    }
+                }
+
+                int index = previousSelection != null ? cboSearchColumn.Items.IndexOf(previousSelection) : 0;
+                cboSearchColumn.SelectedIndex = index >= 0 ? index : 0;
+                cboSearchColumn.SelectedIndexChanged += CboSearchColumn_SelectedIndexChanged;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating search columns: {ex.Message}");
+            }
+        }
+
         private void ShowProgress(bool show, string message = "")
         {
             if (InvokeRequired)
@@ -1679,6 +1855,10 @@ namespace DataSplitPro
                 // Ensure STT column is properly set after all operations
                 EnsureSTTColumn();
 
+                // Refresh filter column list and re-apply active filter
+                UpdateSearchColumns();
+                ApplyFilter();
+
                 // Update stats
                 UpdateStats(result.lineCount, result.maxColumns);
 
@@ -1776,6 +1956,10 @@ namespace DataSplitPro
 
                 // Ensure STT column is properly set after all operations
                 EnsureSTTColumn();
+
+                // Refresh filter column list and re-apply active filter
+                UpdateSearchColumns();
+                ApplyFilter();
 
                 // Update stats with total count
                 int totalRows = dgvData.Rows.Count;
