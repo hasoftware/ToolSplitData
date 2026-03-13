@@ -48,6 +48,9 @@ namespace DataSplitPro
         private ComboBox cboSearchColumn = null!;
         private Button btnClearSearch = null!;
 
+        // Remove duplicates option (applied on paste/import when checked)
+        private CheckBox chkRemoveDuplicates = null!;
+
         // Export functionality controls
         private TextBox txtExportFormat = null!;
         private Button[] columnButtons = new Button[16]; // Column1 to Column16
@@ -136,7 +139,7 @@ namespace DataSplitPro
                 this.SuspendLayout();
 
                 // Form properties
-                this.Text = "Data Split Pro v1.2 - HASOFTWARE";
+                this.Text = "Data Split Pro v1.3 - HASOFTWARE";
                 this.Size = new Size(1000, 700);
                 this.StartPosition = FormStartPosition.CenterScreen;
                 this.MinimumSize = new Size(800, 600);
@@ -222,6 +225,17 @@ namespace DataSplitPro
                 };
                 btnClearSearch.FlatAppearance.BorderSize = 0;
                 btnClearSearch.Click += BtnClearSearch_Click;
+
+                chkRemoveDuplicates = new CheckBox
+                {
+                    Text = "Xóa trùng lặp",
+                    Font = new Font("Segoe UI", 10),
+                    ForeColor = Color.White,
+                    AutoSize = true,
+                    Location = new Point(700, 181),
+                    Checked = false,
+                    Cursor = Cursors.Hand
+                };
 
                 // Export format section
                 lblExportFormat = new Label
@@ -594,7 +608,7 @@ namespace DataSplitPro
                 var allControls = new List<Control>
                 {
                     lblDelimiter, txtDelimiter, pnlDelimiterSeparator,
-                    lblSearch, txtSearch, cboSearchColumn, btnClearSearch,
+                    lblSearch, txtSearch, cboSearchColumn, btnClearSearch, chkRemoveDuplicates,
                     lblExportFormat, pnlExportSeparator, txtExportFormat, btnClearExport, btnCopyExport, btnExportFile,
                     progressBar, lblProgress, dgvData
                 };
@@ -1225,8 +1239,11 @@ namespace DataSplitPro
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource = new CancellationTokenSource();
 
+                // Read checkbox state on UI thread before going to background
+                bool removeDuplicates = chkRemoveDuplicates.Checked;
+
                 // Process data in background thread with progress reporting
-                var result = await Task.Run(() => ProcessDataWithProgress(inputText, delimiter, cancellationTokenSource.Token));
+                var result = await Task.Run(() => ProcessDataWithProgress(inputText, delimiter, removeDuplicates, cancellationTokenSource.Token));
 
                 if (!cancellationTokenSource.Token.IsCancellationRequested)
                 {
@@ -1622,10 +1639,24 @@ namespace DataSplitPro
             }
         }
 
-        private (DataTable dt, int lineCount, int maxColumns) ProcessDataWithProgress(string inputText, string delimiter, CancellationToken cancellationToken)
+        private (DataTable dt, int lineCount, int maxColumns) ProcessDataWithProgress(string inputText, string delimiter, bool removeDuplicates, CancellationToken cancellationToken)
         {
             delimiter = string.IsNullOrWhiteSpace(delimiter) ? "|" : delimiter;
             string[] lines = inputText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Remove duplicate lines when the option is checked (keeps first occurrence)
+            if (removeDuplicates && lines.Length > 0)
+            {
+                UpdateProgress("Đang loại bỏ dòng trùng lặp...");
+                int originalCount = lines.Length;
+                lines = lines.Distinct(StringComparer.Ordinal).ToArray();
+
+                int removedCount = originalCount - lines.Length;
+                if (removedCount > 0)
+                {
+                    UpdateProgress($"Đã loại bỏ {removedCount} dòng trùng lặp");
+                }
+            }
 
             DataTable dt = new DataTable();
 
@@ -2344,8 +2375,11 @@ namespace DataSplitPro
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource = new CancellationTokenSource();
 
+                // Read checkbox state on UI thread before going to background
+                bool removeDuplicates = chkRemoveDuplicates.Checked;
+
                 // Process data in background thread
-                var result = await Task.Run(() => ProcessDataWithProgress(inputText, delimiter, cancellationTokenSource.Token));
+                var result = await Task.Run(() => ProcessDataWithProgress(inputText, delimiter, removeDuplicates, cancellationTokenSource.Token));
 
                 // Update UI on main thread - append data instead of replacing
                 await UpdateUIAppendAsync(result);
