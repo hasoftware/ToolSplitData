@@ -639,6 +639,11 @@ namespace DataSplitPro
                 dgvData.CellDoubleClick += DgvData_CellDoubleClick;
                 dgvData.EditingControlShowing += DgvData_EditingControlShowing;
                 dgvData.SelectionChanged += DgvData_SelectionChanged;
+
+                // Drag & drop file import
+                dgvData.AllowDrop = true;
+                dgvData.DragEnter += DgvData_DragEnter;
+                dgvData.DragDrop += DgvData_DragDrop;
                 this.Resize += MainForm_Resize;
 
                 this.ResumeLayout(false);
@@ -1491,6 +1496,46 @@ namespace DataSplitPro
                 txt.BackColor = Color.FromArgb(60, 60, 63);
                 txt.ForeColor = Color.White;
                 txt.BorderStyle = BorderStyle.None;
+            }
+        }
+
+        private void DgvData_DragEnter(object? sender, DragEventArgs e)
+        {
+            // Only accept files being dragged in
+            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private async void DgvData_DragDrop(object? sender, DragEventArgs e)
+        {
+            try
+            {
+                if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
+                    return;
+
+                string filePath = files[0];
+                if (!File.Exists(filePath))
+                    return;
+
+                ShowProgress(true, $"Đang import file {Path.GetFileName(filePath)}...");
+
+                string content = await Task.Run(() => File.ReadAllText(filePath, Encoding.UTF8));
+                await ProcessDataAsync(content, txtDelimiter.Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi import file kéo thả: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                ShowProgress(false);
             }
         }
 
