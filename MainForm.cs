@@ -139,7 +139,7 @@ namespace DataSplitPro
                 this.SuspendLayout();
 
                 // Form properties
-                this.Text = "Data Split Pro v1.3 - HASOFTWARE";
+                this.Text = "Data Split Pro v1.4 - HASOFTWARE";
                 this.Size = new Size(1000, 700);
                 this.StartPosition = FormStartPosition.CenterScreen;
                 this.MinimumSize = new Size(800, 600);
@@ -1516,17 +1516,53 @@ namespace DataSplitPro
         {
             try
             {
-                if (e.Data?.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
+                if (e.Data?.GetData(DataFormats.FileDrop) is not string[] droppedPaths || droppedPaths.Length == 0)
                     return;
 
-                string filePath = files[0];
-                if (!File.Exists(filePath))
+                // Keep only real files (skip folders)
+                var files = droppedPaths.Where(File.Exists).ToList();
+                if (files.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy file hợp lệ trong dữ liệu kéo thả!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
+                }
 
-                ShowProgress(true, $"Đang import file {Path.GetFileName(filePath)}...");
+                // Ask what to do with existing data
+                bool keepOld = false;
+                if (dgvData.Rows.Count > 0)
+                {
+                    DialogResult result = MessageBox.Show(
+                        "Bảng đang có dữ liệu. Bạn có muốn giữ lại dữ liệu cũ không?\n\n" +
+                        "Yes = Giữ lại data cũ\nNo = Xóa data cũ\nCancel = Hủy import",
+                        "Import file", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
-                string content = await Task.Run(() => File.ReadAllText(filePath, Encoding.UTF8));
-                await ProcessDataAsync(content, txtDelimiter.Text);
+                    if (result == DialogResult.Cancel)
+                        return;
+
+                    keepOld = result == DialogResult.Yes;
+                }
+
+                for (int i = 0; i < files.Count; i++)
+                {
+                    string filePath = files[i];
+                    ShowProgress(true, $"Đang import file {i + 1}/{files.Count}: {Path.GetFileName(filePath)}...");
+
+                    string content = await Task.Run(() => File.ReadAllText(filePath, Encoding.UTF8));
+
+                    // First file replaces data (unless keeping old); remaining files always append
+                    if (i == 0 && !keepOld)
+                    {
+                        await ProcessDataAsync(content, txtDelimiter.Text);
+                    }
+                    else
+                    {
+                        await ProcessDataAsyncKeepOld(content, txtDelimiter.Text);
+                    }
+                }
+
+                MessageBox.Show($"Đã import {files.Count} file!\nTổng số dòng hiện tại: {dgvData.Rows.Count}", "Thành công",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
