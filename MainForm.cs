@@ -153,6 +153,11 @@ namespace DataSplitPro
                     Padding = new Padding(20)
                 };
 
+                // Icon font: Segoe Fluent Icons (Win11) with fallback to Segoe MDL2 Assets (Win10)
+                string iconFontName = FontFamily.Families.Any(f => f.Name == "Segoe Fluent Icons")
+                    ? "Segoe Fluent Icons"
+                    : "Segoe MDL2 Assets";
+
 
 
                 // Delimiter section (moved down)
@@ -177,20 +182,29 @@ namespace DataSplitPro
                 };
 
                 // Search/filter section (same row as delimiter)
+                var lblSearchIcon = new Label
+                {
+                    Text = "\uE721", // Search glyph
+                    Font = new Font(iconFontName, 11),
+                    ForeColor = Color.FromArgb(100, 200, 255),
+                    AutoSize = true,
+                    Location = new Point(355, 182)
+                };
+
                 lblSearch = new Label
                 {
-                    Text = "🔍 Lọc:",
+                    Text = "Lọc:",
                     Font = new Font("Segoe UI", 10),
                     ForeColor = Color.White,
                     AutoSize = true,
-                    Location = new Point(220, 183)
+                    Location = new Point(379, 183)
                 };
 
                 txtSearch = new TextBox
                 {
                     Font = new Font("Segoe UI", 10),
-                    Location = new Point(285, 180),
-                    Size = new Size(220, 25),
+                    Location = new Point(420, 180),
+                    Size = new Size(200, 25),
                     BackColor = Color.FromArgb(60, 60, 63),
                     ForeColor = Color.White,
                     BorderStyle = BorderStyle.FixedSingle,
@@ -198,15 +212,13 @@ namespace DataSplitPro
                 };
                 txtSearch.TextChanged += TxtSearch_TextChanged;
 
-                cboSearchColumn = new ComboBox
+                cboSearchColumn = new DarkComboBox
                 {
                     Font = new Font("Segoe UI", 9),
-                    Location = new Point(515, 180),
-                    Size = new Size(130, 25),
+                    Location = new Point(630, 180),
+                    Size = new Size(120, 25),
                     BackColor = Color.FromArgb(60, 60, 63),
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    DropDownStyle = ComboBoxStyle.DropDownList
+                    ForeColor = Color.White
                 };
                 cboSearchColumn.Items.Add("Tất cả cột");
                 cboSearchColumn.SelectedIndex = 0;
@@ -214,10 +226,10 @@ namespace DataSplitPro
 
                 btnClearSearch = new Button
                 {
-                    Text = "✕",
-                    Font = new Font("Segoe UI", 9),
-                    Location = new Point(655, 180),
-                    Size = new Size(30, 25),
+                    Text = "\uE711", // Cancel (X) glyph
+                    Font = new Font(iconFontName, 8),
+                    Location = new Point(758, 180),
+                    Size = new Size(28, 25),
                     BackColor = Color.FromArgb(220, 53, 69),
                     ForeColor = Color.White,
                     FlatStyle = FlatStyle.Flat,
@@ -232,19 +244,50 @@ namespace DataSplitPro
                     Font = new Font("Segoe UI", 10),
                     ForeColor = Color.White,
                     AutoSize = true,
-                    Location = new Point(700, 181),
+                    Location = new Point(210, 181),
                     Checked = false,
                     Cursor = Cursors.Hand
                 };
 
+                // Thin vertical divider between the import options and the filter group
+                var pnlToolbarDivider = new Panel
+                {
+                    Location = new Point(335, 180),
+                    Size = new Size(1, 25),
+                    BackColor = Color.FromArgb(85, 85, 85)
+                };
+
+                // Vertically center every control of the toolbar row on one shared centerline
+                var toolbarRowControls = new Control[]
+                {
+                    lblDelimiter, txtDelimiter, lblSearchIcon, lblSearch,
+                    txtSearch, cboSearchColumn, btnClearSearch, chkRemoveDuplicates
+                };
+                const int toolbarRowTop = 180;
+                const int toolbarRowHeight = 25;
+                foreach (var rowControl in toolbarRowControls)
+                {
+                    int controlHeight = rowControl.AutoSize ? rowControl.PreferredSize.Height : rowControl.Height;
+                    rowControl.Location = new Point(rowControl.Left, toolbarRowTop + (toolbarRowHeight - controlHeight) / 2);
+                }
+
                 // Export format section
+                var lblExportIcon = new Label
+                {
+                    Text = "\uE8A9", // Data grid (ViewAll) glyph
+                    Font = new Font(iconFontName, 12),
+                    ForeColor = Color.FromArgb(100, 200, 255),
+                    AutoSize = true,
+                    Location = new Point(20, 21)
+                };
+
                 lblExportFormat = new Label
                 {
-                    Text = "📊 Data Export",
+                    Text = "Data Export",
                     Font = new Font("Segoe UI", 11, FontStyle.Bold),
                     ForeColor = Color.FromArgb(100, 200, 255),
                     AutoSize = true,
-                    Location = new Point(20, 20)
+                    Location = new Point(46, 20)
                 };
 
                 txtExportFormat = new TextBox
@@ -486,9 +529,33 @@ namespace DataSplitPro
                 };
 
                 // Logo label (VS Code style)
-                // Load and resize logo to fit status bar height
-                var logoImage = Image.FromFile("hasoftware.ico");
-                var resizedLogo = new Bitmap(logoImage, new Size(32, 14)); // Very small to fit status bar
+                // Scale logo to 16px height, width computed from the source aspect ratio (no distortion)
+                Image? resizedLogo = null;
+                try
+                {
+                    if (File.Exists("hasoftware.ico"))
+                    {
+                        using var sourceIcon = new Icon("hasoftware.ico", 256, 256);
+                        using var sourceBitmap = sourceIcon.ToBitmap();
+
+                        int targetHeight = 16;
+                        int targetWidth = Math.Max(1, (int)Math.Round((double)sourceBitmap.Width * targetHeight / sourceBitmap.Height));
+
+                        var logoBitmap = new Bitmap(targetWidth, targetHeight);
+                        using (var g = Graphics.FromImage(logoBitmap))
+                        {
+                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                            g.DrawImage(sourceBitmap, new Rectangle(0, 0, targetWidth, targetHeight));
+                        }
+                        resizedLogo = logoBitmap;
+                    }
+                }
+                catch (Exception logoEx)
+                {
+                    Console.WriteLine($"Error loading status bar logo: {logoEx.Message}");
+                }
 
                 lblLogo = new ToolStripStatusLabel
                 {
@@ -608,8 +675,8 @@ namespace DataSplitPro
                 var allControls = new List<Control>
                 {
                     lblDelimiter, txtDelimiter, pnlDelimiterSeparator,
-                    lblSearch, txtSearch, cboSearchColumn, btnClearSearch, chkRemoveDuplicates,
-                    lblExportFormat, pnlExportSeparator, txtExportFormat, btnClearExport, btnCopyExport, btnExportFile,
+                    chkRemoveDuplicates, pnlToolbarDivider, lblSearchIcon, lblSearch, txtSearch, cboSearchColumn, btnClearSearch,
+                    lblExportIcon, lblExportFormat, pnlExportSeparator, txtExportFormat, btnClearExport, btnCopyExport, btnExportFile,
                     progressBar, lblProgress, dgvData
                 };
 
@@ -2805,6 +2872,74 @@ namespace DataSplitPro
             };
 
             return menuItem;
+        }
+    }
+}
+
+// Dark-themed ComboBox matching the app's flat dark style
+public class DarkComboBox : ComboBox
+{
+    private const int WM_PAINT = 0x000F;
+
+    public Color BorderColor { get; set; } = Color.FromArgb(100, 100, 100);
+    public Color ArrowColor { get; set; } = Color.FromArgb(204, 204, 204);
+
+    public DarkComboBox()
+    {
+        DropDownStyle = ComboBoxStyle.DropDownList;
+        FlatStyle = FlatStyle.Flat;
+        DrawMode = DrawMode.OwnerDrawFixed;
+        ItemHeight = 19;
+    }
+
+    protected override void OnDrawItem(DrawItemEventArgs e)
+    {
+        if (e.Index < 0) return;
+
+        bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+        using (var bg = new SolidBrush(selected ? Color.FromArgb(0, 120, 215) : BackColor))
+        {
+            e.Graphics.FillRectangle(bg, e.Bounds);
+        }
+
+        TextRenderer.DrawText(e.Graphics, GetItemText(Items[e.Index]), Font,
+            new Rectangle(e.Bounds.X + 4, e.Bounds.Y, e.Bounds.Width - 4, e.Bounds.Height),
+            ForeColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        base.WndProc(ref m);
+
+        // Repaint border and arrow after the system paints, so no white chrome remains
+        if (m.Msg == WM_PAINT)
+        {
+            using var g = Graphics.FromHwnd(Handle);
+
+            using (var pen = new Pen(BorderColor))
+            {
+                g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+            }
+
+            // Cover the default arrow button area with the back color, then draw a flat arrow
+            var arrowArea = new Rectangle(Width - 18, 1, 17, Height - 2);
+            using (var bg = new SolidBrush(BackColor))
+            {
+                g.FillRectangle(bg, arrowArea);
+            }
+
+            int cx = arrowArea.X + arrowArea.Width / 2;
+            int cy = arrowArea.Y + arrowArea.Height / 2;
+            var arrow = new[]
+            {
+                new Point(cx - 4, cy - 2),
+                new Point(cx + 4, cy - 2),
+                new Point(cx, cy + 3)
+            };
+            using (var brush = new SolidBrush(ArrowColor))
+            {
+                g.FillPolygon(brush, arrow);
+            }
         }
     }
 }

@@ -15,4 +15,7 @@
         <FileVersion>1.4.0.0</FileVersion>
         <ApplicationIcon>hasoftware.ico</ApplicationIcon>
     </PropertyGroup>
+    <ItemGroup>
+        <None Include="hasoftware.ico" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
