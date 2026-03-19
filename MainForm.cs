@@ -40,6 +40,7 @@ namespace DataSplitPro
         private ToolStripStatusLabel lblTelegram = null!;
         private ToolStripStatusLabel lblChannel = null!;
         private ToolStripStatusLabel lblGithub = null!;
+        private ToolStripStatusLabel lblAbout = null!;
         private CancellationTokenSource? cancellationTokenSource = null;
 
         // Search/filter controls
@@ -139,7 +140,7 @@ namespace DataSplitPro
                 this.SuspendLayout();
 
                 // Form properties
-                this.Text = "Data Split Pro v1.4 - HASOFTWARE";
+                this.Text = "Data Split Pro v1.5 - HASOFTWARE";
                 this.Size = new Size(1000, 700);
                 this.StartPosition = FormStartPosition.CenterScreen;
                 this.MinimumSize = new Size(800, 600);
@@ -617,6 +618,20 @@ namespace DataSplitPro
                     Margin = new Padding(5, 0, 10, 0)
                 };
 
+                lblAbout = new ToolStripStatusLabel
+                {
+                    Text = "\uE946", // Info glyph (About)
+                    Font = new Font(iconFontName, 10),
+                    ForeColor = Color.FromArgb(204, 204, 204),
+                    AutoSize = true,
+                    IsLink = true,
+                    LinkColor = Color.FromArgb(70, 150, 255),
+                    ActiveLinkColor = Color.FromArgb(100, 180, 255),
+                    LinkBehavior = LinkBehavior.NeverUnderline,
+                    ToolTipText = "Giới thiệu phần mềm (F1)",
+                    Margin = new Padding(5, 0, 10, 0)
+                };
+
                 // Create spacer for right alignment
                 var spacer = new ToolStripStatusLabel
                 {
@@ -654,6 +669,8 @@ namespace DataSplitPro
                     Console.WriteLine("Added lblChannel");
                     statusStrip.Items.Add(lblGithub);
                     Console.WriteLine("Added lblGithub");
+                    statusStrip.Items.Add(lblAbout);
+                    Console.WriteLine("Added lblAbout");
                     Console.WriteLine("All labels added successfully");
                 }
                 catch (Exception ex)
@@ -668,6 +685,7 @@ namespace DataSplitPro
                 lblTelegram.Click += LblTelegram_Click;
                 lblChannel.Click += LblChannel_Click;
                 lblGithub.Click += LblGithub_Click;
+                lblAbout.Click += (s, e) => ShowAboutDialog();
 
                 // Bottom panel removed - developer info now in Status Bar
 
@@ -774,6 +792,12 @@ namespace DataSplitPro
                         ToggleCheckboxesForSelectedRows();
                         e.Handled = true;
                     }
+                }
+                // F1: About dialog
+                else if (e.KeyCode == Keys.F1)
+                {
+                    ShowAboutDialog();
+                    e.Handled = true;
                 }
             }
             catch (Exception ex)
@@ -888,6 +912,15 @@ namespace DataSplitPro
                 deleteNotSelectedItem
             });
 
+            // Separator before About
+            var separator3 = new ToolStripSeparator
+            {
+                BackColor = Color.FromArgb(85, 85, 85),
+                Margin = new Padding(0, 1, 0, 1)
+            };
+
+            var aboutItem = CreateWindows11MenuItem("Giới thiệu (About)", null, (s, e) => ShowAboutDialog());
+
             // Add items to context menu
             contextMenuStrip.Items.AddRange(new ToolStripItem[]
             {
@@ -897,7 +930,9 @@ namespace DataSplitPro
                 selectItem,
                 deselectItem,
                 separator2,
-                deleteDataItem
+                deleteDataItem,
+                separator3,
+                aboutItem
             });
 
             // Assign context menu to DataGridView
@@ -1179,6 +1214,19 @@ namespace DataSplitPro
         // Removed scrollbar event handler that was causing crashes
 
         // Removed MainForm_Load scrollbar customization
+
+        private void ShowAboutDialog()
+        {
+            try
+            {
+                using var aboutForm = new AboutForm();
+                aboutForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error showing About dialog: {ex.Message}");
+            }
+        }
 
         private void LblDev_Click(object? sender, EventArgs e)
         {
