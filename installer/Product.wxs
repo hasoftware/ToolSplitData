@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WiX v4/v5 installer definition for Data Split Pro -->
+<!-- Build via build-installer.ps1 (passes ProductVersion and PublishDir) -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Package Name="Data Split Pro"
+             Manufacturer="HASOFTWARE"
+             Version="$(var.ProductVersion)"
+             UpgradeCode="A7D3EEE5-21A1-45E9-AFFB-3F650AA9D1F4"
+             Language="1033"
+             Scope="perMachine"
+             Compressed="yes">
+
+        <MajorUpgrade DowngradeErrorMessage="Phiên bản mới hơn của Data Split Pro đã được cài đặt." />
+        <MediaTemplate EmbedCab="yes" />
+
+        <Icon Id="AppIcon" SourceFile="$(var.ProjectDir)hasoftware.ico" />
+        <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+        <Property Id="ARPHELPLINK" Value="https://t.me/hasoftware" />
+        <Property Id="ARPURLINFOABOUT" Value="https://github.com/hasoftware" />
+
+        <!-- Install folder: Program Files\Data Split Pro -->
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="Data Split Pro">
+                <Component Id="MainExecutable">
+                    <File Id="AppExe"
+                          Source="$(var.PublishDir)\DataSplitPro.exe"
+                          KeyPath="yes" />
+                </Component>
+                <Component Id="AppIconFile">
+                    <File Id="IcoFile" Source="$(var.PublishDir)\hasoftware.ico" />
+                </Component>
+            </Directory>
+        </StandardDirectory>
+
+        <!-- Start Menu shortcut -->
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="AppMenuFolder" Name="Data Split Pro">
+                <Component Id="StartMenuShortcut">
+                    <Shortcut Id="StartMenuSc"
+                              Name="Data Split Pro"
+                              Description="Công cụ tách và xử lý dữ liệu văn bản theo cột"
+                              Target="[INSTALLFOLDER]DataSplitPro.exe"
+                              WorkingDirectory="INSTALLFOLDER"
+                              Icon="AppIcon" />
+                    <RemoveFolder Id="RemoveAppMenuFolder" On="uninstall" />
+                    <RegistryValue Root="HKCU"
+                                   Key="Software\HASOFTWARE\DataSplitPro"
+                                   Name="startmenu" Type="integer" Value="1"
+                                   KeyPath="yes" />
+                </Component>
+            </Directory>
+        </StandardDirectory>
+
+        <!-- Desktop shortcut -->
+        <StandardDirectory Id="DesktopFolder">
+            <Component Id="DesktopShortcut">
+                <Shortcut Id="DesktopSc"
+                          Name="Data Split Pro"
+                          Description="Công cụ tách và xử lý dữ liệu văn bản theo cột"
+                          Target="[INSTALLFOLDER]DataSplitPro.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="AppIcon" />
+                <RegistryValue Root="HKCU"
+                               Key="Software\HASOFTWARE\DataSplitPro"
+                               Name="desktop" Type="integer" Value="1"
+                               KeyPath="yes" />
+            </Component>
+        </StandardDirectory>
+
+        <Feature Id="MainFeature" Title="Data Split Pro" Level="1">
+            <ComponentRef Id="MainExecutable" />
+            <ComponentRef Id="AppIconFile" />
+            <ComponentRef Id="StartMenuShortcut" />
+            <ComponentRef Id="DesktopShortcut" />
+        </Feature>
+    </Package>
+</Wix>
